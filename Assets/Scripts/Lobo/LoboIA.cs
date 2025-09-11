@@ -169,7 +169,6 @@ public class LoboIA : MonoBehaviour
 
         cameraJogador.SetParent(paiAtualCamera);
 
-        NightManager.Instance.SanidadeAtual -= NightManager.Instance.GetNoiteAtual().SanidadeInicial / 3;
         player.GetComponent<CharacterController>().enabled = true;
     }
 

@@ -11,18 +11,18 @@ public class ControleDosBotoesEMenus : MonoBehaviour
 
     public void PlayGame()
     {
-        CarregarScena("Mapa1");
+        CarregarScena("Gameplay");
     }
 
     public void VoltarParaMenu()
     {
-        CarregarScena("MenuPrincipal");
+        CarregarScena("Menu");
     }
 
     private void CarregarScena(string NomeScena)
     {
         PlayerPrefs.SetString("ProximaCena", NomeScena);
-        SceneManager.LoadScene("LoadingScene");
+        SceneManager.LoadScene("Loading");
     }
 
 

@@ -19,28 +19,12 @@ public class NightManager : MonoBehaviour
     private bool noiteRolando = false;
     private Text txtRelogio;
 
-    // Evento disparado quando a noite termina
     public event Action OnNoiteVencida;
 
     public event Action OnGameOver;
 
-
     private float PontuacaoDaNoite;
     private float PontuacaoDaRun;
-
-    public float SanidadeAtual;
-
-    [Header("Fog Config")]
-    public float fogMin = 0.002f; // fog normal (sanidade cheia)
-    public float fogMax = 0.05f;  // fog forte (sanidade zerada)
-
-
-    [Header("Áudio de Loucura")]
-    public AudioSource audioLoucura; // Arraste o AudioSource no Inspector
-    public float volumeMaximo = 1f;   // Volume máximo quando a sanidade chega a 0
-    public float volumeMinimo = 0f;   // Volume inicial
-    private bool musicaAtiva = false;
-
 
     public Dificuldade dificuldade = Dificuldade.normal;
     public enum Dificuldade
@@ -50,7 +34,6 @@ public class NightManager : MonoBehaviour
         dificil,
         inferno
     }
-
 
     void Awake()
     {
@@ -70,50 +53,26 @@ public class NightManager : MonoBehaviour
     }
 
     private ChromaticAberration chromaticAberration;
-    private int balaChuva = 1;
 
     void Update()
     {
-
-        if (balaChuva == 1 && JaPassouHorario(noiteAtual.ChuvaComecaAs))
-        {
-            GameMaster.Instance.chuvaController.ComecarTemporal();
-            balaChuva = 0;
-        }
-
         if (noiteRolando && !PausarNoite)
         {
-            SanidadeAtual -= noiteAtual.vecidadeSanidade * Time.deltaTime;
             tempoRestante -= Time.deltaTime;
 
             if (tempoRestante <= 0)
             {
                 VencerNoite();
             }
-            if (SanidadeAtual <= 0) print("MORTE POR BIXIN");
 
-            GameMaster.Instance.sanidadeBarra.fillAmount = SanidadeAtual / noiteAtual.SanidadeInicial;
-
-            AtualizarFog();
-            AtualizarChromaticAberration();
-            AtualizarAudioLoucura();
             AtualizarRelogio();
-        }
-        else
-        {
-            audioLoucura.Stop();
         }
     }
     public void IniciarNoite()
     {
-        var noiteEscolhidaIndex = PlayerPrefs.GetInt("NoiteEscolhida");
-
-        noiteAtual = configuracoes[noiteEscolhidaIndex];
-        SanidadeAtual = noiteAtual.SanidadeInicial;
         tempoRestante = noiteAtual.duracao;
         txtRelogio = GameMaster.Instance.RelogioText;
         txtRelogio.text = "22:00";
-        balaChuva = 1;
         if (noiteAtual.ChuvaAleatorio) noiteAtual.ChuvaComecaAs = CriarHorarioAleatorio();
 
         noiteRolando = true;
@@ -206,61 +165,6 @@ public class NightManager : MonoBehaviour
     {
         PlayerPrefs.SetString("ProximaCena", NomeScena);
         SceneManager.LoadScene("LoadingScene");
-    }
-
-     private void AtualizarFog()
-    {
-        float porcentagem = Mathf.Clamp01(SanidadeAtual / noiteAtual.SanidadeInicial);
-
-        float t = Mathf.InverseLerp(0.5f, 0f, porcentagem); 
-
-        RenderSettings.fog = true;
-        RenderSettings.fogMode = FogMode.Exponential;
-        RenderSettings.fogDensity = Mathf.Lerp(fogMin, fogMax, t);
-    }
-
-    private void AtualizarAudioLoucura()
-    {
-        if (audioLoucura == null) return;
-
-        float porcentagem = Mathf.Clamp01(SanidadeAtual / noiteAtual.SanidadeInicial);
-
-        // Começa a tocar quando chega a 50% ou menos
-        if (porcentagem <= 0.5f && !musicaAtiva)
-        {
-            audioLoucura.Play();
-            musicaAtiva = true;
-        }
-
-        if (musicaAtiva)
-        {
-            // Interpolação do volume: quanto menor a sanidade, maior o volume
-            float t = Mathf.InverseLerp(0.5f, 0f, porcentagem);
-            audioLoucura.volume = Mathf.Lerp(volumeMinimo, volumeMaximo, t);
-        }
-    }
-
-    public void RecuperarSanidade(float quantidade)
-    {
-        if (!noiteRolando) return;
-
-        SanidadeAtual = Mathf.Min(SanidadeAtual + quantidade, noiteAtual.SanidadeInicial);
-    }
-
-
-    private void AtualizarChromaticAberration()
-    {
-        if (chromaticAberration == null)
-            chromaticAberration = GameMaster.Instance.chromaticAberration;
-
-        if (chromaticAberration == null) return;
-
-        float porcentagem = Mathf.Clamp01(SanidadeAtual / noiteAtual.SanidadeInicial);
-
-        // Mesmo esquema: só depois de 50% começa a subir
-        float t = Mathf.InverseLerp(0.5f, 0f, porcentagem);
-
-        chromaticAberration.intensity.value = Mathf.Lerp(0f, 1f, t);
     }
 
     public ConfiguracaoNoite GetNoiteAtual()
